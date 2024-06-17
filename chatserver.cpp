@@ -45,10 +45,22 @@ void ChatServer::receiveNickname()
 
     QByteArray data = clientSocket->readAll();
     QString nickname = QString::fromUtf8(data).trimmed();
+
+    for (QTcpSocket *client : qAsConst(clients)) {
+        if (client->property("nickname").toString() == nickname) {
+            qDebug() << "Nickname already in use:" << nickname;
+            QString errorMessage = "Nickname already in use. Disconnecting.";
+            sendMessageToClient(errorMessage, clientSocket);
+            clientSocket->disconnectFromHost();
+            clients.removeOne(clientSocket);
+            clientSocket->deleteLater();
+            return;
+        }
+    }
+
     clientSocket->setProperty("nickname", nickname);
     qDebug() << "Received nickname:" << nickname;
 
-    // Change the connection to read messages after setting the nickname
     disconnect(clientSocket, &QTcpSocket::readyRead, this, &ChatServer::receiveNickname);
     connect(clientSocket, &QTcpSocket::readyRead, this, &ChatServer::receiveMessage);
 }
