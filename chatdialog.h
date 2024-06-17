@@ -2,11 +2,8 @@
 #define CHATDIALOG_H
 
 #include <QDialog>
-#include <QUdpSocket>
-
-QT_BEGIN_NAMESPACE
-namespace Ui { class ChatDialog; }
-QT_END_NAMESPACE
+#include <QTcpSocket>
+#include "ui_chatdialog.h"
 
 class ChatDialog : public QDialog
 {
@@ -19,13 +16,21 @@ public:
 private slots:
     void sendMessage();
     void receiveMessage();
-    void saveHistory(const QString &message);
+    void onConnected();
+    void onDisconnected();
+    void connectBotton();
+    void disConnectBotton();
+    void onErrorOccurred(QAbstractSocket::SocketError socketError);
 
 private:
     Ui::ChatDialog *ui;
-    QUdpSocket *udpSocket;
+    QTcpSocket *tcpSocket;
     QString nickname;
-    quint16 port;
+    QString serverIP;
+    quint16 serverPort;
+    QString targetNickname;
+
+    void saveHistory(const QString &message);
 };
 
 #endif // CHATDIALOG_H
