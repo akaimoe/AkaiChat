@@ -45,7 +45,7 @@ void ChatDialog::sendMessage()
         QString dataToSend = QString("%1:%2:%3").arg(targetNickname).arg(nickname).arg(message);
         QByteArray data = dataToSend.toUtf8();
         tcpSocket->write(data);
-        saveHistory(QString("Me (%1): %2").arg(QDateTime::currentDateTime().toString()).arg(message));
+        saveHistory(QString("Me (%1): %2  to %3").arg(QDateTime::currentDateTime().toString()).arg(message).arg(targetNickname));
         ui->messageEdit->clear();
     }
 }
@@ -112,7 +112,9 @@ void ChatDialog::onErrorOccurred(QAbstractSocket::SocketError socketError)
 
 void ChatDialog::saveHistory(const QString &message)
 {
-    QFile file("history.txt");
+    QString saveFile;
+    saveFile = nickname+"_history.txt";
+    QFile file(saveFile);
     if (file.open(QIODevice::Append | QIODevice::Text)) {
         QTextStream out(&file);
         out << message << "\n";

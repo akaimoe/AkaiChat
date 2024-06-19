@@ -18,12 +18,10 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     chatdialog.cpp \
-    chatserver.cpp \
     main.cpp
 
 HEADERS += \
-    chatdialog.h \
-    chatserver.h
+    chatdialog.h
 
 FORMS += \
     chatdialog.ui
