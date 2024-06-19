@@ -3,6 +3,9 @@
 
 #include <QTcpServer>
 #include <QTcpSocket>
+#include <QDateTime>
+#include <QFile>
+#include <QTextStream>
 #include <QHash>
 
 class ChatServer : public QTcpServer
@@ -20,6 +23,8 @@ private slots:
     void receiveNickname();
     void receiveMessage();
     void clientDisconnected();
+    void storeUnsentMessage(const QString &targetNickname, const QString &senderNickname, const QString &content);
+    void checkForUnsentMessages(const QString &nickname, QTcpSocket *clientSocket);
 
 private:
     QList<QTcpSocket *> clients;

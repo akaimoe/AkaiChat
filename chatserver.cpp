@@ -10,13 +10,13 @@ ChatServer::ChatServer(QObject *parent)
         qDebug() << "Failed to start server.";
         restartServer();
     } else {
-        qDebug() << "Server started.";
+        qDebug() << "Server started nya~";
     }
 }
 
 void ChatServer::restartServer()
 {
-    close(); // 关闭当前监听
+    close();
     if (!listen(QHostAddress::Any, 1920)) {
         qDebug() << "Failed to restart server.";
     } else {
@@ -61,6 +61,8 @@ void ChatServer::receiveNickname()
     clientSocket->setProperty("nickname", nickname);
     qDebug() << "Received nickname:" << nickname;
 
+    checkForUnsentMessages(nickname, clientSocket);
+
     disconnect(clientSocket, &QTcpSocket::readyRead, this, &ChatServer::receiveNickname);
     connect(clientSocket, &QTcpSocket::readyRead, this, &ChatServer::receiveMessage);
 }
@@ -82,6 +84,7 @@ void ChatServer::receiveMessage()
             QString content = messageParts.at(2);
 
             // 查找目标客户端
+            bool targetFound = false;
             int num = 0;
             for (QTcpSocket *client : qAsConst(clients)) {
                 num += 1;
@@ -96,15 +99,20 @@ void ChatServer::receiveMessage()
                     if (client->property("nickname").toString() == targetNickname) {
                         QString messageToSend = QString("%1 (%2): %3").arg(senderNickname).arg(QDateTime::currentDateTime().toString()).arg(content);
                         sendMessageToClient(messageToSend, client);
-                        return;
+                        targetFound = true;
+                        break;
                     }
                 }
 
             }
-            std::cout << num << std::endl;
+            std::cout << num << ' ' << targetFound << std::endl;
             // 如果未找到目标客户端，发送消息给发送者
-            QString errorMessage = QString("Target client '%1' not found.").arg(targetNickname);
-            sendMessageToClient(errorMessage, senderSocket);
+            if (!targetFound) {
+                // 存储未发送的消息
+                storeUnsentMessage(targetNickname, senderNickname, content);
+                QString errorMessage = QString("Target client '%1' was not online").arg(targetNickname);
+                sendMessageToClient(errorMessage, senderSocket);
+            }
         }
     }
 }
@@ -123,7 +131,49 @@ void ChatServer::clientDisconnected()
 
 void ChatServer::sendMessageToClient(const QString &message, QTcpSocket *clientSocket)
 {
-    QByteArray data = message.toUtf8();
+    QByteArray data = (message).toUtf8();
     clientSocket->write(data);
     clientSocket->flush();
+}
+
+void ChatServer::storeUnsentMessage(const QString &targetNickname, const QString &senderNickname, const QString &content)
+{
+    QFile file("unsent_messages.txt");
+    if (file.open(QIODevice::Append | QIODevice::Text)) {
+        QTextStream out(&file);
+        out << targetNickname << ":" << senderNickname << ":" << content << "\n";
+        qDebug() << "Save the unsent messages succ";
+        file.close();
+    } else {
+        qDebug() << "Failed to open file for storing unsent messages.";
+    }
+}
+
+void ChatServer::checkForUnsentMessages(const QString &nickname, QTcpSocket *clientSocket)
+{
+    QFile file("unsent_messages.txt");
+    if (file.open(QIODevice::ReadWrite | QIODevice::Text)) {
+        QTextStream in(&file);
+        QStringList unsentMessages;
+        while (!in.atEnd()) {
+            QString line = in.readLine();
+            QStringList parts = line.split(":");
+            if (parts.size() == 3 && parts.at(0) == nickname) {
+                QString senderNickname = parts.at(1);
+                QString content = parts.at(2);
+                QString messageToSend = QString("%1 (%2): %3\n").arg(senderNickname).arg(QDateTime::currentDateTime().toString()).arg(content);
+                sendMessageToClient(messageToSend, clientSocket);
+            } else {
+                unsentMessages.append(line);
+            }
+        }
+        file.resize(0); // 清空文件
+        QTextStream out(&file);
+        for (const QString &message : unsentMessages) {
+            out << message << "\n";
+        }
+        file.close();
+    } else {
+        qDebug() << "Failed to open file for checking unsent messages.";
+    }
 }
