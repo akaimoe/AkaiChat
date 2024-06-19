@@ -27,6 +27,13 @@
       <widget class="QLineEdit" name="nicknameEdit"/>
      </item>
      <item>
+      <widget class="QLabel" name="sendTag">
+       <property name="text">
+        <string>-></string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QLineEdit" name="targetNicknameEdit"/>
      </item>
     </layout>

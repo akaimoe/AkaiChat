@@ -37,7 +37,7 @@ void ChatDialog::sendMessage()
     targetNickname = ui->targetNicknameEdit->text();
 
     if (tcpSocket->state() != QAbstractSocket::ConnectedState) {
-        ui->chatHistory->append("Errer, you should connect at first!");
+        ui->chatHistory->append("Errer, you should connect at first nya!");
 //        rerturn;
     }
 
@@ -45,6 +45,8 @@ void ChatDialog::sendMessage()
         QString dataToSend = QString("%1:%2:%3").arg(targetNickname).arg(nickname).arg(message);
         QByteArray data = dataToSend.toUtf8();
         tcpSocket->write(data);
+        QString sendMsg = "Me ("+QDateTime::currentDateTime().toString()+"): "+message+" to "+targetNickname;
+        ui->chatHistory->append(sendMsg);
         saveHistory(QString("Me (%1): %2  to %3").arg(QDateTime::currentDateTime().toString()).arg(message).arg(targetNickname));
         ui->messageEdit->clear();
     }
@@ -66,8 +68,7 @@ void ChatDialog::onConnected()
     qDebug() << tcpSocket->property("nickname").toString();
     tcpSocket->write(nickname.toUtf8());
     tcpSocket->flush();
-    ui->chatHistory->append("Connected to server. nickname is ");
-    ui->chatHistory->append(nickname);
+    ui->chatHistory->append("Connected to server nya~");
     ui->nicknameEdit->setReadOnly(true);
     ui->ipEdit->setReadOnly(true);
     ui->portEdit->setReadOnly(true);
@@ -113,7 +114,7 @@ void ChatDialog::onErrorOccurred(QAbstractSocket::SocketError socketError)
 void ChatDialog::saveHistory(const QString &message)
 {
     QString saveFile;
-    saveFile = nickname+"_history.txt";
+    saveFile = "data/"+nickname+"_history.txt";
     QFile file(saveFile);
     if (file.open(QIODevice::Append | QIODevice::Text)) {
         QTextStream out(&file);
