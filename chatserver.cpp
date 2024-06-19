@@ -94,7 +94,7 @@ void ChatServer::receiveMessage()
                         return;
                     }
                     if (client->property("nickname").toString() == targetNickname) {
-                        QString messageToSend = QString("%1: %2").arg(senderNickname).arg(content);
+                        QString messageToSend = QString("%1 (%2): %3").arg(senderNickname).arg(QDateTime::currentDateTime().toString()).arg(content);
                         sendMessageToClient(messageToSend, client);
                         return;
                     }
